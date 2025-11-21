@@ -1,6 +1,6 @@
 import React from 'react';
 import { LandscapeStyle, InteriorStyle, TimeOfDay, Season, GenerationSettings, AnalysisResult, Proposal } from '../types';
-import { Settings2, Sun, Leaf, Palmtree, Type, Sparkles, Search, ArrowRight, Home, Armchair } from 'lucide-react';
+import { Settings2, Sun, Leaf, Palmtree, Type, Sparkles, Search, Home, Armchair } from 'lucide-react';
 
 interface ControlPanelProps {
   settings: GenerationSettings;

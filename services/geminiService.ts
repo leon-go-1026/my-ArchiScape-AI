@@ -5,10 +5,8 @@ const GENERATION_MODEL = 'gemini-2.5-flash-image';
 const ANALYSIS_MODEL = 'gemini-2.5-flash';
 
 export const analyzeArchitecture = async (base64Image: string): Promise<AnalysisResult> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) throw new Error("API Key is missing.");
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Initialize strictly as per environment guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   // Clean base64
   const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
@@ -100,12 +98,7 @@ export const generateLandscape = async (
   base64Image: string,
   settings: GenerationSettings
 ): Promise<string> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API Key is missing.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
   
   let taskInstructions = '';

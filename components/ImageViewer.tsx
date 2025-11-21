@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Download, Maximize2 } from 'lucide-react';
+import { Eye, EyeOff, Download } from 'lucide-react';
 import { UploadSection } from './UploadSection';
 
 interface ImageViewerProps {
