@@ -10,9 +10,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Polyfill process.env.API_KEY so it is available in the browser
-      // This pulls the key from Vercel Environment Variables during build
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // Polyfill process.env.API_KEY so it is available in the browser.
+      // We use || '' to ensure it is a string, preventing undefined errors.
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || ''),
     },
   };
 });

@@ -63,11 +63,14 @@ export default function App() {
           }));
         } catch (err: any) {
           console.error(err);
+          // Check if it's a critical configuration error
+          const isConfigError = err.message?.includes("API Key");
+          
           setState(prev => ({ 
             ...prev, 
             isAnalyzing: false,
-            error: "智能分析失败，已切换至手动模式。" 
-            // Don't fail completely, just let them use custom
+            // If it's an API key error, show it. Otherwise show generic analysis error.
+            error: isConfigError ? err.message : "智能分析失败，已切换至手动模式。" 
           }));
         }
       }
@@ -159,12 +162,12 @@ export default function App() {
 
            {/* Error Toast */}
            {state.error && (
-             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-xl shadow-xl shadow-red-500/10 flex items-center gap-3 animate-bounce-in z-50">
-               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-               <span className="font-medium">{state.error}</span>
+             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-xl shadow-xl shadow-red-500/10 flex items-center gap-3 animate-bounce-in z-50 max-w-xl w-full mx-4">
+               <div className="w-2 h-2 bg-red-500 rounded-full shrink-0"></div>
+               <span className="font-medium text-sm break-all">{state.error}</span>
                <button 
                  onClick={() => setState(s => ({...s, error: null}))}
-                 className="ml-4 text-red-400 hover:text-red-700 font-bold"
+                 className="ml-auto text-red-400 hover:text-red-700 font-bold px-2"
                >
                  ×
                </button>
