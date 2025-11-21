@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LayoutGrid, Sparkles } from 'lucide-react';
 import { ControlPanel } from './components/ControlPanel';
 import { ImageViewer } from './components/ImageViewer';
-import { generateLandscape, analyzeArchitecture } from './services/geminiService';
+import { generateLandscape } from './services/geminiService';
 import { AppState, GenerationSettings, LandscapeStyle, InteriorStyle, TimeOfDay, Season } from './types';
 
 const DEFAULT_SETTINGS: GenerationSettings = {
@@ -17,13 +17,11 @@ const DEFAULT_SETTINGS: GenerationSettings = {
 export default function App() {
   const [state, setState] = useState<AppState>({
     originalImage: null,
+    referenceImage: null,
     generatedImage: null,
     isGenerating: false,
-    isAnalyzing: false,
-    analysisResult: null,
     error: null,
     settings: DEFAULT_SETTINGS,
-    activeTab: 'ai',
   });
 
   const handleImageUpload = (base64: string) => {
@@ -33,7 +31,6 @@ export default function App() {
            originalImage: null, 
            generatedImage: null, 
            error: null,
-           analysisResult: null
          }));
     } else {
         setState(prev => ({ 
@@ -41,51 +38,17 @@ export default function App() {
           originalImage: base64, 
           generatedImage: null, 
           error: null,
-          analysisResult: null, // Reset previous analysis
-          activeTab: 'ai'
         }));
     }
   };
 
-  // Auto-analyze when image is uploaded
-  useEffect(() => {
-    const performAnalysis = async () => {
-      if (state.originalImage && !state.analysisResult && !state.isAnalyzing) {
-        setState(prev => ({ ...prev, isAnalyzing: true }));
-        try {
-          const result = await analyzeArchitecture(state.originalImage);
-          setState(prev => ({ 
-            ...prev, 
-            isAnalyzing: false, 
-            analysisResult: result,
-            // Automatically select the first proposal
-            settings: result.proposals[0]?.settings || prev.settings
-          }));
-        } catch (err: any) {
-          console.error(err);
-          // Check if it's a critical configuration error
-          const isConfigError = err.message?.includes("API Key");
-          
-          setState(prev => ({ 
-            ...prev, 
-            isAnalyzing: false,
-            // If it's an API key error, show it. Otherwise show generic analysis error.
-            error: isConfigError ? err.message : "智能分析失败，已切换至手动模式。" 
-          }));
-        }
-      }
-    };
-
-    performAnalysis();
-  }, [state.originalImage]);
+  const handleReferenceUpload = (base64: string | null) => {
+    setState(prev => ({ ...prev, referenceImage: base64 }));
+  };
 
   const handleSettingsChange = (newSettings: GenerationSettings) => {
     setState(prev => ({ ...prev, settings: newSettings }));
   };
-
-  const handleTabChange = (tab: 'ai' | 'custom') => {
-    setState(prev => ({ ...prev, activeTab: tab }));
-  }
 
   const handleGenerate = async () => {
     if (!state.originalImage) return;
@@ -93,7 +56,13 @@ export default function App() {
     setState(prev => ({ ...prev, isGenerating: true, error: null }));
 
     try {
-      const resultImage = await generateLandscape(state.originalImage, state.settings);
+      // Pass the reference image if it exists
+      const resultImage = await generateLandscape(
+        state.originalImage, 
+        state.settings,
+        state.referenceImage
+      );
+      
       setState(prev => ({ 
         ...prev, 
         generatedImage: resultImage, 
@@ -139,12 +108,10 @@ export default function App() {
               settings={state.settings}
               onSettingsChange={handleSettingsChange}
               isGenerating={state.isGenerating}
-              isAnalyzing={state.isAnalyzing}
-              analysisResult={state.analysisResult}
               onGenerate={handleGenerate}
               hasImage={!!state.originalImage}
-              activeTab={state.activeTab}
-              onTabChange={handleTabChange}
+              referenceImage={state.referenceImage}
+              onReferenceUpload={handleReferenceUpload}
             />
           </div>
         </aside>

@@ -1,130 +1,48 @@
-import React from 'react';
-import { LandscapeStyle, InteriorStyle, TimeOfDay, Season, GenerationSettings, AnalysisResult, Proposal } from '../types';
-import { Settings2, Sun, Leaf, Palmtree, Type, Sparkles, Search, Home, Armchair } from 'lucide-react';
+import React, { useRef } from 'react';
+import { LandscapeStyle, InteriorStyle, TimeOfDay, Season, GenerationSettings } from '../types';
+import { Sun, Leaf, Palmtree, Type, Sparkles, Home, Armchair, ImagePlus, X } from 'lucide-react';
 
 interface ControlPanelProps {
   settings: GenerationSettings;
   onSettingsChange: (newSettings: GenerationSettings) => void;
   isGenerating: boolean;
-  isAnalyzing: boolean;
-  analysisResult: AnalysisResult | null;
   onGenerate: () => void;
   hasImage: boolean;
-  activeTab: 'ai' | 'custom';
-  onTabChange: (tab: 'ai' | 'custom') => void;
+  referenceImage: string | null;
+  onReferenceUpload: (base64: string | null) => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({ 
   settings, 
   onSettingsChange, 
   isGenerating,
-  isAnalyzing,
-  analysisResult,
   onGenerate,
   hasImage,
-  activeTab,
-  onTabChange
+  referenceImage,
+  onReferenceUpload
 }) => {
+
+  const refFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (key: keyof GenerationSettings, value: any) => {
     onSettingsChange({ ...settings, [key]: value });
   };
 
-  const handleProposalSelect = (proposal: Proposal) => {
-    onSettingsChange(proposal.settings);
+  const handleRefFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onReferenceUpload(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
     <div className="flex flex-col h-full relative">
       
-      {/* Tabs */}
-      <div className="flex mb-6 p-1 bg-slate-100 rounded-xl">
-        <button
-          onClick={() => onTabChange('ai')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${
-            activeTab === 'ai' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          <Sparkles className="w-4 h-4" /> 智能推荐
-        </button>
-        <button
-          onClick={() => onTabChange('custom')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${
-            activeTab === 'custom' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          <Settings2 className="w-4 h-4" /> 自定义参数
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto space-y-6 px-1 pb-24">
-        
-        {activeTab === 'ai' && (
-          <div className="space-y-6 animate-fade-in">
-            {!hasImage ? (
-               <div className="text-center py-10 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                 <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                 <p className="text-sm">请上传图片以开始智能分析</p>
-               </div>
-            ) : isAnalyzing ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-brand-600 bg-brand-50 p-4 rounded-xl border border-brand-100">
-                  <div className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full"></div>
-                  <span className="font-medium text-sm">正在分析建筑风格...</span>
-                </div>
-                {[1,2,3].map(i => (
-                  <div key={i} className="h-32 bg-slate-100 rounded-xl animate-pulse"></div>
-                ))}
-              </div>
-            ) : analysisResult ? (
-              <>
-                <div className="bg-slate-900 text-slate-50 p-4 rounded-xl shadow-sm">
-                  <div className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">识别结果</div>
-                  <h3 className="font-bold text-lg">{analysisResult.architecturalStyle}</h3>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed opacity-80">{analysisResult.confidence}</p>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-brand-500" /> 推荐方案
-                  </h4>
-                  {analysisResult.proposals.map((proposal) => {
-                    const isSelected = JSON.stringify(settings) === JSON.stringify(proposal.settings);
-                    return (
-                      <div 
-                        key={proposal.id}
-                        onClick={() => handleProposalSelect(proposal)}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md group ${
-                          isSelected 
-                            ? 'border-brand-500 bg-brand-50/50 ring-1 ring-brand-200' 
-                            : 'border-slate-200 bg-white hover:border-brand-300'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h5 className={`font-bold ${isSelected ? 'text-brand-700' : 'text-slate-800'}`}>
-                            {proposal.title}
-                          </h5>
-                          {isSelected && <div className="w-2 h-2 bg-brand-500 rounded-full"></div>}
-                        </div>
-                        <p className="text-xs text-slate-500 mb-3 leading-relaxed">{proposal.rationale}</p>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-600">
-                            {proposal.settings.season.split('(')[1].replace(')', '')}
-                          </span>
-                          <span className="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-600">
-                            {proposal.settings.time.split('(')[1].replace(')', '')}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : null}
-          </div>
-        )}
-
-        {activeTab === 'custom' && (
+      <div className="flex-1 overflow-y-auto space-y-6 px-1 pb-24 custom-scrollbar">
           <div className="space-y-6 animate-fade-in">
             
             {/* Scene Type Selector */}
@@ -149,6 +67,48 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                >
                   <Armchair className="w-3 h-3" /> 室内 (Interior)
                </button>
+            </div>
+
+            {/* Reference Image Section */}
+            <div className="space-y-3">
+               <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <ImagePlus className="w-4 h-4" /> 参考图 (可选)
+                  </h3>
+                  <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">参考风格与色调</span>
+               </div>
+               
+               {!referenceImage ? (
+                 <div 
+                   onClick={() => refFileInputRef.current?.click()}
+                   className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-400 hover:bg-brand-50/50 transition-colors text-slate-400 hover:text-brand-600 h-32"
+                 >
+                    <ImagePlus className="w-6 h-6 opacity-50" />
+                    <span className="text-xs">点击上传参考图片</span>
+                 </div>
+               ) : (
+                 <div className="relative rounded-lg overflow-hidden border border-slate-200 group">
+                    <img src={referenceImage} alt="Reference" className="w-full h-32 object-cover opacity-90" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onReferenceUpload(null); }}
+                          className="p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-red-500/80 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <div className="absolute bottom-1 left-2 right-2 text-[10px] text-white/90 drop-shadow-md">
+                       将应用此图的色调与植物
+                    </div>
+                 </div>
+               )}
+               <input 
+                 type="file" 
+                 ref={refFileInputRef} 
+                 onChange={handleRefFileChange} 
+                 accept="image/*" 
+                 className="hidden" 
+               />
             </div>
 
             {/* Dynamic Style Section */}
@@ -244,16 +204,15 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               />
             </div>
           </div>
-        )}
       </div>
 
       {/* Fixed Bottom Action */}
       <div className="absolute bottom-0 left-0 right-0 pt-4 pb-0 bg-gradient-to-t from-white via-white to-transparent z-10">
         <button
           onClick={onGenerate}
-          disabled={!hasImage || isGenerating || isAnalyzing}
+          disabled={!hasImage || isGenerating}
           className={`w-full py-4 px-6 rounded-xl font-bold text-white text-lg shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${
-            !hasImage || isGenerating || isAnalyzing
+            !hasImage || isGenerating
               ? 'bg-slate-300 cursor-not-allowed shadow-none'
               : 'bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 hover:shadow-brand-500/30'
           }`}
@@ -269,7 +228,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           ) : (
             <>
               <Sparkles className="w-5 h-5" />
-              <span>生成效果图</span>
+              <span>{referenceImage ? '应用参考图生成' : '生成效果图'}</span>
             </>
           )}
         </button>

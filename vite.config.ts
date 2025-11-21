@@ -10,9 +10,11 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Polyfill process.env.API_KEY so it is available in the browser.
-      // We use || '' to ensure it is a string, preventing undefined errors.
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || ''),
+      // Polyfill process.env.API_KEY and API_BASE_URL
+      // We prefer the loaded env (which includes .env files) but fallback to process.env (system env)
+      // This ensures Vercel environment variables are picked up correctly.
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY || ''),
+      'process.env.API_BASE_URL': JSON.stringify(env.API_BASE_URL || process.env.API_BASE_URL || ''),
     },
   };
 });

@@ -45,27 +45,11 @@ export interface GenerationSettings {
   promptEnhancement: string;
 }
 
-export interface Proposal {
-  id: string;
-  title: string;
-  description: string;
-  settings: GenerationSettings;
-  rationale: string;
-}
-
-export interface AnalysisResult {
-  architecturalStyle: string;
-  confidence: string;
-  proposals: Proposal[];
-}
-
 export interface AppState {
   originalImage: string | null; // Base64
+  referenceImage: string | null; // Base64 (Style Reference)
   generatedImage: string | null; // Base64
   isGenerating: boolean;
-  isAnalyzing: boolean;
-  analysisResult: AnalysisResult | null;
   error: string | null;
   settings: GenerationSettings;
-  activeTab: 'ai' | 'custom';
 }
